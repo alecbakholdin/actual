@@ -502,12 +502,41 @@ export function useTransactionBatchActions() {
     );
   };
 
+  const onBatchMarkPending = async (
+    ids: string[],
+    onSuccess: (ids: string[]) => void,
+  ) => {
+    const { data } = await runQuery(
+      q('transactions')
+        .filter({ id: { $oneof: ids } })
+        .select('*')
+        .options({ splits: 'grouped' }),
+    );
+    const transactions = ungroupTransactions(data as TransactionEntity[]);
+    // only remove pending status if all transactions are pending
+    const setPending = !!transactions.find(t => !t.pending);
+
+    const changes = {
+      updated: ids.map(
+        id =>
+          ({
+            id,
+            pending: setPending,
+            ...(setPending ? { cleared: false } : {}),
+          }) as unknown as Partial<TransactionEntity>,
+      ),
+    };
+    await send('transactions-batch-update', changes);
+    onSuccess?.(ids);
+  };
+
   return {
     onBatchEdit,
     onBatchDuplicate,
     onBatchDelete,
     onBatchLinkSchedule,
     onBatchUnlinkSchedule,
+    onBatchMarkPending,
     onSetTransfer,
   };
 }

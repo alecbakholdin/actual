@@ -14,6 +14,7 @@ import { isPreviewId } from 'loot-core/shared/transactions';
 import { type TransactionEntity } from 'loot-core/types/models';
 
 import { useDispatch } from '../../redux';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
 type BalanceMenuProps = Omit<
   ComponentPropsWithoutRef<typeof Menu>,
@@ -25,6 +26,7 @@ type BalanceMenuProps = Omit<
   onLinkSchedule: (id: string) => void;
   onUnlinkSchedule: (id: string) => void;
   onCreateRule: (id: string) => void;
+  onMarkPending: (id: string) => void;
   onScheduleAction: (action: string, id: string) => void;
   onMakeAsNonSplitTransactions: (id: string) => void;
   closeMenu: () => void;
@@ -37,6 +39,7 @@ export function TransactionMenu({
   onLinkSchedule,
   onUnlinkSchedule,
   onCreateRule,
+  onMarkPending,
   onScheduleAction,
   onMakeAsNonSplitTransactions,
   closeMenu,
@@ -49,6 +52,7 @@ export function TransactionMenu({
   const linked = !!transaction.schedule;
   const canUnsplitTransactions =
     !transaction.reconciled && (transaction.is_parent || transaction.is_child);
+  const canMarkPending = useFeatureFlag('pendingTransactionsEnabled');
 
   const scheduleId = isPreview ? transaction.id?.split('/')?.[1] : null;
   const schedulesQuery = useMemo(
@@ -123,6 +127,10 @@ export function TransactionMenu({
           case 'create-rule':
             onCreateRule(transaction.id);
             break;
+          case 'mark-pending':
+            onMarkPending(transaction.id);
+            break;
+
           default:
             throw new Error(`Unrecognized menu option: ${name}`);
         }
@@ -169,6 +177,16 @@ export function TransactionMenu({
                     {
                       name: 'unsplit-transactions',
                       text: t('Unsplit transaction'),
+                    },
+                  ]
+                : []),
+              ...(canMarkPending
+                ? [
+                    {
+                      name: 'mark-pending',
+                      text: transaction.pending
+                        ? t('Unmark Pending')
+                        : t('Mark Pending'),
                     },
                   ]
                 : []),

@@ -637,6 +637,7 @@ function CalendarInner({ widget, parameters }: CalendarInnerProps) {
                     onBatchLinkSchedule={() => {}}
                     onBatchUnlinkSchedule={() => {}}
                     onCreateRule={() => {}}
+                    onMarkPending={() => {}}
                     onScheduleAction={() => {}}
                     onMakeAsNonSplitTransactions={() => {}}
                     showSelection={false}

@@ -117,6 +117,12 @@ export function ExperimentalFeatures() {
             >
               <Trans>Pluggy.ai Bank Sync (Brazilian banks only)</Trans>
             </FeatureToggle>
+            <FeatureToggle
+              flag="pendingTransactionsEnabled"
+              feedbackLink="TODO"
+            >
+              <Trans>Pending Transactions (non-scheduled)</Trans>
+            </FeatureToggle>
           </View>
         ) : (
           <Link

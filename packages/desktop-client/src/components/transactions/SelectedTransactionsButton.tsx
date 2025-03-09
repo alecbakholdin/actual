@@ -18,6 +18,7 @@ import { type TransactionEntity } from 'loot-core/types/models';
 import { useSelectedItems } from '../../hooks/useSelected';
 import { useDispatch } from '../../redux';
 import { SelectedItemsButton } from '../table';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
 type SelectedTransactionsButtonProps = {
   getTransaction: (id: string) => TransactionEntity | undefined;
@@ -38,6 +39,7 @@ type SelectedTransactionsButtonProps = {
   onLinkSchedule: (selectedIds: string[]) => void;
   onUnlinkSchedule: (selectedIds: string[]) => void;
   onCreateRule: (selectedIds: string[]) => void;
+  onMarkPending: (selectedIds: string[]) => void;
   onRunRules: (selectedIds: string[]) => void;
   onSetTransfer: (selectedIds: string[]) => void;
   onScheduleAction: (
@@ -58,6 +60,7 @@ export function SelectedTransactionsButton({
   onLinkSchedule,
   onUnlinkSchedule,
   onCreateRule,
+  onMarkPending,
   onRunRules,
   onSetTransfer,
   onScheduleAction,
@@ -187,6 +190,17 @@ export function SelectedTransactionsButton({
     );
     return areNoReconciledTransactions && areAllSplitTransactions;
   }, [selectedIds, types, getTransaction]);
+
+  const pendingTransactionsEnabled = useFeatureFlag(
+    'pendingTransactionsEnabled',
+  );
+  const canUnmarkPending =
+    pendingTransactionsEnabled &&
+    useMemo(
+      () => selectedIds.map(getTransaction).every(tx => Boolean(tx?.pending)),
+      [selectedIds, types, getTransaction],
+    );
+  const canMarkPending = pendingTransactionsEnabled && !canUnmarkPending;
 
   function onViewSchedule() {
     const firstId = selectedIds[0];
@@ -339,6 +353,22 @@ export function SelectedTransactionsButton({
                     } as const,
                   ]
                 : []),
+              ...(canMarkPending
+                ? [
+                    {
+                      name: 'mark-pending',
+                      text: t('Mark pending'),
+                    },
+                  ]
+                : []),
+              ...(canUnmarkPending
+                ? [
+                    {
+                      name: 'mark-pending',
+                      text: t('Unmark pending'),
+                    },
+                  ]
+                : []),
               Menu.line,
               { type: Menu.label, name: t('Edit field'), text: '' } as const,
               { name: 'date', text: t('Date') } as const,
@@ -389,6 +419,9 @@ export function SelectedTransactionsButton({
             break;
           case 'set-transfer':
             onSetTransfer(selectedIds);
+            break;
+          case 'mark-pending':
+            onMarkPending(selectedIds);
             break;
           default:
             // @ts-expect-error fix me

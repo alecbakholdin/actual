@@ -115,6 +115,7 @@ type AccountHeaderProps = {
 } & Pick<
   ComponentProps<typeof SelectedTransactionsButton>,
   | 'onCreateRule'
+  | 'onMarkPending'
   | 'onScheduleAction'
   | 'onSetTransfer'
   | 'onMakeAsSplitTransaction'
@@ -175,6 +176,7 @@ export function AccountHeader({
   onBatchLinkSchedule,
   onBatchUnlinkSchedule,
   onCreateRule,
+  onMarkPending,
   onApplyFilter,
   onUpdateFilter,
   onClearFilters,
@@ -371,6 +373,7 @@ export function AccountHeader({
               onLinkSchedule={onBatchLinkSchedule}
               onUnlinkSchedule={onBatchUnlinkSchedule}
               onCreateRule={onCreateRule}
+              onMarkPending={onMarkPending}
               onSetTransfer={onSetTransfer}
               onScheduleAction={onScheduleAction}
               showMakeTransfer={showMakeTransfer}

@@ -297,6 +297,9 @@ type AccountInternalProps = {
   onBatchUnlinkSchedule: ReturnType<
     typeof useTransactionBatchActions
   >['onBatchUnlinkSchedule'];
+  onBatchMarkPending: ReturnType<
+    typeof useTransactionBatchActions
+  >['onBatchMarkPending'];
   onBatchDelete: ReturnType<typeof useTransactionBatchActions>['onBatchDelete'];
   categoryId?: string;
   location: ReturnType<typeof useLocation>;
@@ -1371,6 +1374,10 @@ class AccountInternal extends PureComponent<
     );
   };
 
+  onMarkPending = async (ids: string[]) => {
+    this.props.onBatchMarkPending(ids, this.refetchTransactions);
+  };
+
   onSetTransfer = async (ids: string[]) => {
     this.setState({ workingHard: true });
     await this.props.onSetTransfer(
@@ -1821,6 +1828,7 @@ class AccountInternal extends PureComponent<
                 onBatchLinkSchedule={this.onBatchLinkSchedule}
                 onBatchUnlinkSchedule={this.onBatchUnlinkSchedule}
                 onCreateRule={this.onCreateRule}
+                onMarkPending={this.onMarkPending}
                 onUpdateFilter={this.onUpdateFilter}
                 onClearFilters={this.onClearFilters}
                 onReloadSavedFilter={this.onReloadSavedFilter}
@@ -1896,6 +1904,7 @@ class AccountInternal extends PureComponent<
                   onBatchLinkSchedule={this.onBatchLinkSchedule}
                   onBatchUnlinkSchedule={this.onBatchUnlinkSchedule}
                   onCreateRule={this.onCreateRule}
+                  onMarkPending={this.onMarkPending}
                   onScheduleAction={this.onScheduleAction}
                   onMakeAsNonSplitTransactions={
                     this.onMakeAsNonSplitTransactions
@@ -1938,6 +1947,7 @@ function AccountHack(props: AccountHackProps) {
     onBatchUnlinkSchedule,
     onBatchDelete,
     onSetTransfer,
+    onBatchMarkPending,
   } = useTransactionBatchActions();
 
   return (
@@ -1950,6 +1960,7 @@ function AccountHack(props: AccountHackProps) {
       onBatchUnlinkSchedule={onBatchUnlinkSchedule}
       onBatchDelete={onBatchDelete}
       onSetTransfer={onSetTransfer}
+      onBatchMarkPending={onBatchMarkPending}
       {...props}
     />
   );

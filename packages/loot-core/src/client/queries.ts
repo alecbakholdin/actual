@@ -71,7 +71,9 @@ export function accountFilter(
 export function transactions(
   accountId?: AccountEntity['id'] | 'onbudget' | 'offbudget' | 'uncategorized',
 ) {
-  let query = q('transactions').options({ splits: 'grouped' });
+  let query = q('transactions')
+    .options({ splits: 'grouped' })
+    .orderBy({ pending: 'desc' });
 
   const filter = accountFilter(accountId);
   if (filter) {

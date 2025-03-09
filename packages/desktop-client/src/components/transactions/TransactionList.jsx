@@ -96,6 +96,7 @@ export function TransactionList({
   onBatchLinkSchedule,
   onBatchUnlinkSchedule,
   onCreateRule,
+  onMarkPending,
   onScheduleAction,
   onMakeAsNonSplitTransactions,
 }) {
@@ -299,6 +300,7 @@ export function TransactionList({
       onBatchLinkSchedule={onBatchLinkSchedule}
       onBatchUnlinkSchedule={onBatchUnlinkSchedule}
       onCreateRule={onCreateRule}
+      onMarkPending={onMarkPending}
       onScheduleAction={onScheduleAction}
       onMakeAsNonSplitTransactions={onMakeAsNonSplitTransactions}
       showSelection={showSelection}

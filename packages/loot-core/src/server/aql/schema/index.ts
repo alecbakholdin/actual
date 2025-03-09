@@ -54,6 +54,7 @@ export const schema = {
     tombstone: f('boolean'),
     schedule: f('id', { ref: 'schedules' }),
     raw_synced_data: f('string'),
+    pending: f('boolean'),
     // subtransactions is a special field added if the table has the
     // `splits: grouped` option
   },
@@ -336,6 +337,7 @@ export const schemaConfig: SchemaConfig = {
         imported_payee: 'imported_description',
         transfer_id: 'transferred_id',
         payee: 'description',
+        pending: 'pending',
       },
 
       v_transactions_internal: internalFields => {

@@ -484,6 +484,7 @@ function PayeeCell({
   transaction,
   importedPayee,
   isPreview,
+  isEditable,
   onEdit,
   onUpdate,
   onCreatePayee,
@@ -519,7 +520,7 @@ function PayeeCell({
                 border: '1px solid ' + theme.buttonNormalBorder,
               },
         }}
-        disabled={isPreview}
+        disabled={!isEditable}
         onSelect={() =>
           dispatch(
             pushModal({
@@ -601,7 +602,7 @@ function PayeeCell({
       value={payee?.id}
       valueStyle={valueStyle}
       exposed={focused}
-      onExpose={name => !isPreview && onEdit(id, name)}
+      onExpose={name => isEditable && onEdit(id, name)}
       onUpdate={async value => {
         onUpdate('payee', value);
 
@@ -805,6 +806,7 @@ const Transaction = memo(function Transaction({
   onLinkSchedule,
   onUnlinkSchedule,
   onCreateRule,
+  onMarkPending,
   onScheduleAction,
   onMakeAsNonSplitTransactions,
   onSplit,
@@ -828,7 +830,8 @@ const Transaction = memo(function Transaction({
   const [transaction, setTransaction] = useState(() =>
     serializeTransaction(originalTransaction, showZeroInDeposit),
   );
-  const isPreview = isPreviewId(transaction.id);
+  const isPreview = isPreviewId(transaction.id) || transaction.pending;
+  const isEditable = !isPreviewId(transaction.id);
 
   if (
     originalTransaction !== prevTransaction ||
@@ -969,10 +972,11 @@ const Transaction = memo(function Transaction({
     reconciled,
     forceUpcoming,
     is_parent: isParent,
+    pending,
     _unmatched = false,
   } = transaction;
 
-  const previewStatus = forceUpcoming ? 'upcoming' : categoryId;
+  const previewStatus = pending || forceUpcoming ? 'upcoming' : categoryId;
 
   // Join in some data
   const payee = payees && payeeId && getPayeesById(payees)[payeeId];
@@ -1062,6 +1066,7 @@ const Transaction = memo(function Transaction({
           onLinkSchedule={() => onLinkSchedule?.(transaction.id)}
           onUnlinkSchedule={() => onUnlinkSchedule?.(transaction.id)}
           onCreateRule={() => onCreateRule?.(transaction.id)}
+          onMarkPending={() => onMarkPending?.(transaction.id)}
           onScheduleAction={action =>
             onScheduleAction?.(action, transaction.id)
           }
@@ -1177,7 +1182,7 @@ const Transaction = memo(function Transaction({
             inputStyle,
           }) => (
             <DateSelect
-              value={date || ''}
+              value={transaction.pending ? 'TBD' : date || ''}
               dateFormat={dateFormat}
               inputProps={{ onBlur, onKeyDown, style: inputStyle }}
               shouldSaveFromKey={shouldSaveFromKey}
@@ -1205,7 +1210,7 @@ const Transaction = memo(function Transaction({
           }}
           valueStyle={valueStyle}
           exposed={focusedField === 'account'}
-          onExpose={name => !isPreview && onEdit(id, name)}
+          onExpose={name => isEditable && onEdit(id, name)}
           onUpdate={async value => {
             // Only ever allow non-null values
             if (value) {
@@ -1252,6 +1257,7 @@ const Transaction = memo(function Transaction({
           transferAccountsByTransaction={transferAccountsByTransaction}
           importedPayee={importedPayee}
           isPreview={isPreview}
+          isEditable={isEditable}
           onEdit={onEdit}
           onUpdate={onUpdate}
           onCreatePayee={onCreatePayee}
@@ -1270,7 +1276,7 @@ const Transaction = memo(function Transaction({
         value={notes || ''}
         valueStyle={valueStyle}
         formatter={value => notesTagFormatter(value, onNotesTagClick)}
-        onExpose={name => !isPreview && onEdit(id, name)}
+        onExpose={name => isEditable && onEdit(id, name)}
         inputProps={{
           value: notes || '',
           onUpdate: onUpdate.bind(null, 'notes'),
@@ -1332,7 +1338,7 @@ const Transaction = memo(function Transaction({
               },
             }}
             disabled={isTemporaryId(transaction.id)}
-            onEdit={() => !isPreview && onEdit(id, 'category')}
+            onEdit={() => isEditable && onEdit(id, 'category')}
             onSelect={() => onToggleSplit(id)}
           >
             <View
@@ -1420,7 +1426,7 @@ const Transaction = memo(function Transaction({
                 : ''
           }
           exposed={focusedField === 'category'}
-          onExpose={name => !isPreview && onEdit(id, name)}
+          onExpose={name => isEditable && onEdit(id, name)}
           valueStyle={
             !categoryId
               ? {
@@ -1481,7 +1487,7 @@ const Transaction = memo(function Transaction({
         valueStyle={valueStyle}
         textAlign="right"
         title={debit}
-        onExpose={name => !isPreview && onEdit(id, name)}
+        onExpose={name => isEditable && onEdit(id, name)}
         style={{
           ...(isParent && { fontStyle: 'italic' }),
           ...styles.tnum,
@@ -1507,7 +1513,7 @@ const Transaction = memo(function Transaction({
         valueStyle={valueStyle}
         textAlign="right"
         title={credit}
-        onExpose={name => !isPreview && onEdit(id, name)}
+        onExpose={name => isEditable && onEdit(id, name)}
         style={{
           ...(isParent && { fontStyle: 'italic' }),
           ...styles.tnum,
@@ -1920,6 +1926,7 @@ function TransactionTableInner({
         onLinkSchedule={props.onLinkSchedule}
         onUnlinkSchedule={props.onUnlinkSchedule}
         onCreateRule={props.onCreateRule}
+        onMarkPending={props.onMarkPending}
         onScheduleAction={props.onScheduleAction}
         onMakeAsNonSplitTransactions={props.onMakeAsNonSplitTransactions}
         onSplit={props.onSplit}
@@ -2367,6 +2374,7 @@ export const TransactionTable = forwardRef((props, ref) => {
     onBatchLinkSchedule,
     onBatchUnlinkSchedule,
     onCreateRule: onCreateRuleProp,
+    onMarkPending: onMarkPendingProp,
     onScheduleAction: onScheduleActionProp,
     onMakeAsNonSplitTransactions: onMakeAsNonSplitTransactionsProp,
     onSplit: onSplitProp,
@@ -2447,6 +2455,12 @@ export const TransactionTable = forwardRef((props, ref) => {
       onCreateRuleProp([id]);
     },
     [onCreateRuleProp],
+  );
+  const onMarkPending = useCallback(
+    id => {
+      onMarkPendingProp([id]);
+    },
+    [onMarkPendingProp],
   );
   const onScheduleAction = useCallback(
     (action, id) => {
@@ -2615,6 +2629,7 @@ export const TransactionTable = forwardRef((props, ref) => {
       onLinkSchedule={onLinkSchedule}
       onUnlinkSchedule={onUnlinkSchedule}
       onCreateRule={onCreateRule}
+      onMarkPending={onMarkPending}
       onScheduleAction={onScheduleAction}
       onMakeAsNonSplitTransactions={onMakeAsNonSplitTransactions}
       onSplit={onSplit}

@@ -36,6 +36,7 @@ import { Input } from '../common/Input';
 
 import DateSelectLeft from './DateSelect.left.png';
 import DateSelectRight from './DateSelect.right.png';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
 const pickerStyles: CSSProperties = {
   '& .pika-single.actual-date-picker': {
