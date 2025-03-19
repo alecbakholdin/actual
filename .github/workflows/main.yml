@@ -22,5 +22,5 @@ jobs:
           git mv './new-release-notes.md' './upcoming-release-notes/${{ github.event.pull_request.number }}.md'
           git add .
           git commit -m 'Renamed release notes for PR ${{ github.event.pull_request.number }}'
-          git push
+          git push origin ${{ github.ref_name }} 
 
