@@ -71,7 +71,10 @@ import {
 import { useSyncedPref } from '#hooks/useSyncedPref';
 import { useTransactionBatchActions } from '#hooks/useTransactionBatchActions';
 import { useTransactionFilters } from '#hooks/useTransactionFilters';
-import { calculateRunningBalancesBottomUp } from '#hooks/useTransactions';
+import {
+  calculateRunningBalancesBottomUp,
+  useTransactions,
+} from '#hooks/useTransactions';
 import {
   openAccountCloseModal,
   pushModal,
@@ -101,7 +104,7 @@ function isTransactionFilterEntity(
 
 type AllTransactionsProps = {
   account?: AccountEntity | undefined;
-  transactions: TransactionEntity[];
+  transactions: readonly TransactionEntity[];
   balances: Record<TransactionEntity['id'], IntegerAmount> | null;
   showBalances?: boolean | undefined;
   filtered?: boolean | undefined;
@@ -207,6 +210,10 @@ function getField(field?: string) {
 }
 
 type AccountInternalProps = {
+  transactions?: readonly TransactionEntity[];
+  refetch?: () => void;
+  fetchNextPage?: () => void;
+
   accountId?:
     | AccountEntity['id']
     | 'onbudget'
@@ -257,7 +264,6 @@ type AccountInternalProps = {
   onSyncAndDownload: (accountId?: AccountEntity['id']) => void;
   onCreatePayee: (name: PayeeEntity['name']) => Promise<PayeeEntity['id']>;
 };
-
 type AccountInternalState = {
   search: string;
   filterConditions: ConditionEntity[];
@@ -446,7 +452,7 @@ class AccountInternal extends PureComponent<
   };
 
   refetchTransactions = async () => {
-    void this.paged?.run();
+    void this.props.refetch?.();
   };
 
   fetchTransactions = (filterConditions?: ConditionEntity[]) => {
@@ -1578,7 +1584,7 @@ class AccountInternal extends PureComponent<
       this.setState(
         {
           transactions: [],
-          filterConditions: conditions,
+          filterConditions: [],
         },
         () => {
           this.fetchTransactions();
@@ -1733,6 +1739,7 @@ class AccountInternal extends PureComponent<
 
   render() {
     const {
+      transactions,
       accounts,
       categoryGroups,
       payees,
@@ -1744,7 +1751,6 @@ class AccountInternal extends PureComponent<
       categoryId,
     } = this.props;
     const {
-      transactions,
       loading,
       workingHard,
       filterId,
@@ -1883,9 +1889,7 @@ class AccountInternal extends PureComponent<
                   account={account}
                   transactions={transactions}
                   allTransactions={allTransactions}
-                  loadMoreTransactions={() =>
-                    this.paged && this.paged.fetchNext()
-                  }
+                  loadMoreTransactions={() => this.props.fetchNextPage?.()}
                   accounts={accounts}
                   category={category}
                   categoryGroups={categoryGroups}
@@ -1989,6 +1993,12 @@ function AccountHack(props: AccountHackProps) {
     onSetTransfer,
   } = useTransactionBatchActions();
 
+  const query = useTransactionFilter(props);
+  const { transactions, refetch, fetchNextPage } = useTransactions({
+    query,
+    options: { pageSize: 10 },
+  });
+
   return (
     <AccountInternal
       dispatch={dispatch}
@@ -1999,9 +2009,17 @@ function AccountHack(props: AccountHackProps) {
       onBatchUnlinkSchedule={onBatchUnlinkSchedule}
       onBatchDelete={onBatchDelete}
       onSetTransfer={onSetTransfer}
+      transactions={transactions}
+      refetch={refetch}
+      fetchNextPage={fetchNextPage}
       {...props}
     />
   );
+}
+
+function useTransactionFilter(props: AccountHackProps) {
+  const query = queries.transactions(props.accountId).select('*');
+  return query;
 }
 
 export function Account() {
